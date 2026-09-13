@@ -13,7 +13,6 @@ import java.util.UUID;
 public class JwtServiceImpl implements JwtService {
 
     private final JwtProperties jwtProperties;
-
     public JwtServiceImpl(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
     }
@@ -30,5 +29,26 @@ public class JwtServiceImpl implements JwtService {
                 .id(UUID.randomUUID().toString())
                 .signWith(jwtProperties.signingKey())
                 .compact();
+    }
+
+    @Override
+    public Long extractUserId(String token) {
+        var claims = Jwts.parser()
+                .verifyWith(jwtProperties.signingKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        String subject = claims.getSubject();
+
+        if (subject == null || subject.isBlank()) {
+            throw new IllegalArgumentException("JWT subject is missing");
+        }
+
+        try {
+            return Long.valueOf(subject);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("JWT subject is invalid", e);
+        }
     }
 }

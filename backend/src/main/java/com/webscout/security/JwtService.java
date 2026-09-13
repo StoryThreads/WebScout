@@ -6,4 +6,6 @@ public interface JwtService {
 
     String generateAccessToken(User user);
 
+    Long extractUserId(String token);
+
 }
