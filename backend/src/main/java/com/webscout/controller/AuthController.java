@@ -1,5 +1,7 @@
 package com.webscout.controller;
 
+import com.webscout.dto.LoginRequest;
+import com.webscout.dto.LoginResponse;
 import com.webscout.dto.RegisterUserRequest;
 import com.webscout.dto.UserResponse;
 import com.webscout.service.UserService;
@@ -27,5 +29,13 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
