@@ -1,13 +1,11 @@
 package com.webscout.controller;
 
-import com.webscout.dto.LoginRequest;
-import com.webscout.dto.LoginResponse;
-import com.webscout.dto.RegisterUserRequest;
-import com.webscout.dto.UserResponse;
+import com.webscout.dto.*;
 import com.webscout.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,5 +35,25 @@ public class AuthController {
     ) {
         LoginResponse response = userService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        RefreshTokenResponse response = userService.refresh(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @Valid @RequestBody LogoutRequest request,
+            Authentication authentication
+    ) {
+        Long userId = (Long) authentication.getPrincipal();
+
+        userService.logout(request, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

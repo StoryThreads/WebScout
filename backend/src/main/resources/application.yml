@@ -7,11 +7,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-  spring:
-    jpa:
-      hibernate:
-        ddl-auto: validate
-      open-in-view: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
 
 security:
   jwt:

@@ -1,9 +1,6 @@
 package com.webscout.service;
 
-import com.webscout.dto.LoginRequest;
-import com.webscout.dto.LoginResponse;
-import com.webscout.dto.RegisterUserRequest;
-import com.webscout.dto.UserResponse;
+import com.webscout.dto.*;
 import com.webscout.entity.User;
 import com.webscout.exception.EmailAlreadyExistsException;
 import com.webscout.exception.InvalidCredentialsException;
@@ -114,6 +111,39 @@ public class UserServiceImpl implements UserService {
         return new LoginResponse(
                 accessToken,
                 refreshTokenResult.rawToken()
+        );
+    }
+
+    @Override
+    public RefreshTokenResponse refresh(RefreshTokenRequest request) {
+
+        RefreshTokenResult result =
+                refreshTokenService.rotate(request.getRefreshToken());
+
+        String accessToken =
+                jwtService.generateAccessToken(result.refreshToken().getUser());
+
+        return new RefreshTokenResponse(
+                accessToken,
+                result.rawToken()
+        );
+    }
+
+    @Override
+    public UserResponse getCurrentUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(InvalidCredentialsException::new);
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    public void logout(
+            LogoutRequest request,
+            Long userId
+    ) {
+        refreshTokenService.revoke(
+                request.getRefreshToken(),
+                userId
         );
     }
 }

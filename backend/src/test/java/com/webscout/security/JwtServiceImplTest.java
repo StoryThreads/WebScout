@@ -2,8 +2,10 @@ package com.webscout.security;
 
 import com.webscout.entity.User;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -13,17 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceImplTest {
 
-    @Test
-    void generateAccessToken_shouldContainExpectedClaimsAndValidSignature() {
-        JwtProperties properties = new JwtProperties();
+    private static final String SECRET =
+            "dPIfiLAObiLOYcH3nEABCRF9wQMxIWHHWr0g00fs6Qc=";
 
-        String secret = "dPIfiLAObiLOYcH3nEABCRF9wQMxIWHHWr0g00fs6Qc=";
-
-        properties.setSecret(secret);
-        properties.setAccessTokenLifetime(Duration.ofMinutes(15));
-
-        JwtServiceImpl jwtService = new JwtServiceImpl(properties);
-
+    private User createUser(Long id) {
         User user = new User(
                 "test@example.com",
                 "unused",
@@ -32,7 +27,58 @@ class JwtServiceImplTest {
                 OffsetDateTime.now()
         );
 
-        String token = jwtService.generateAccessToken(user);
+        setUserId(user, id);
+
+        return user;
+    }
+
+    private void setUserId(User user, Long id) {
+        try {
+            Field field = User.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(user, id);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(
+                    "Failed to assign test user ID",
+                    e
+            );
+        }
+    }
+
+    private JwtServiceImpl createJwtService() {
+        JwtProperties properties = new JwtProperties();
+
+        properties.setSecret(SECRET);
+        properties.setAccessTokenLifetime(
+                Duration.ofMinutes(15)
+        );
+
+        return new JwtServiceImpl(properties);
+    }
+
+    private JwtProperties createJwtProperties() {
+        JwtProperties properties = new JwtProperties();
+
+        properties.setSecret(SECRET);
+        properties.setAccessTokenLifetime(
+                Duration.ofMinutes(15)
+        );
+
+        return properties;
+    }
+
+    @Test
+    void generateAccessToken_shouldContainExpectedClaimsAndValidSignature() {
+
+        JwtProperties properties = createJwtProperties();
+
+        JwtServiceImpl jwtService =
+                new JwtServiceImpl(properties);
+
+        User user = createUser(42L);
+
+        String token =
+                jwtService.generateAccessToken(user);
 
         var claims = Jwts.parser()
                 .verifyWith(properties.signingKey())
@@ -40,106 +86,122 @@ class JwtServiceImplTest {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        assertEquals(String.valueOf(user.getId()), claims.getSubject());
-        assertNotNull(claims.getIssuedAt());
-        assertNotNull(claims.getExpiration());
-        assertNotNull(claims.getId());
+        assertEquals(
+                "42",
+                claims.getSubject()
+        );
 
-        assertTrue(claims.getExpiration().after(claims.getIssuedAt()));
+        assertNotNull(
+                claims.getIssuedAt()
+        );
+
+        assertNotNull(
+                claims.getExpiration()
+        );
+
+        assertNotNull(
+                claims.getId()
+        );
+
+        assertTrue(
+                claims.getExpiration()
+                        .after(claims.getIssuedAt())
+        );
     }
 
     @Test
     void extractUserId_shouldReturnUserIdForValidToken() {
-        JwtProperties properties = new JwtProperties();
 
-        String secret = "dPIfiLAObiLOYcH3nEABCRF9wQMxIWHHWr0g00fs6Qc=";
+        JwtServiceImpl jwtService =
+                createJwtService();
 
-        properties.setSecret(secret);
-        properties.setAccessTokenLifetime(Duration.ofMinutes(15));
+        User user = createUser(42L);
 
-        JwtServiceImpl jwtService = new JwtServiceImpl(properties);
+        String token =
+                jwtService.generateAccessToken(user);
 
-        User user = new User(
-                "test@example.com",
-                "unused",
-                "ACTIVE",
-                OffsetDateTime.now(),
-                OffsetDateTime.now()
+        Long userId =
+                jwtService.extractUserId(token);
+
+        assertEquals(
+                42L,
+                userId
         );
-
-        user.setId(42L);
-
-        String token = jwtService.generateAccessToken(user);
-
-        Long userId = jwtService.extractUserId(token);
-
-        assertEquals(42L, userId);
     }
 
     @Test
     void extractUserId_shouldRejectTamperedToken() {
-        JwtProperties properties = new JwtProperties();
 
-        String secret = "dPIfiLAObiLOYcH3nEABCRF9wQMxIWHHWr0g00fs6Qc=";
+        JwtServiceImpl jwtService =
+                createJwtService();
 
-        properties.setSecret(secret);
-        properties.setAccessTokenLifetime(Duration.ofMinutes(15));
+        User user = createUser(42L);
 
-        JwtServiceImpl jwtService = new JwtServiceImpl(properties);
+        String token =
+                jwtService.generateAccessToken(user);
 
-        User user = new User(
-                "test@example.com",
-                "unused",
-                "ACTIVE",
-                OffsetDateTime.now(),
-                OffsetDateTime.now()
+        String[] tokenParts = token.split("\\.");
+
+        assertEquals(
+                3,
+                tokenParts.length
         );
 
-        user.setId(42L);
+        String signature = tokenParts[2];
 
-        String token = jwtService.generateAccessToken(user);
+        char firstCharacter = signature.charAt(0);
 
-        String tamperedToken = token.substring(0, token.length() - 1) + "x";
+        char replacement =
+                firstCharacter == 'A' ? 'B' : 'A';
+
+        String tamperedSignature =
+                replacement + signature.substring(1);
+
+        String tamperedToken =
+                tokenParts[0]
+                        + "."
+                        + tokenParts[1]
+                        + "."
+                        + tamperedSignature;
 
         assertThrows(
-                Exception.class,
+                JwtException.class,
                 () -> jwtService.extractUserId(tamperedToken)
         );
     }
 
     @Test
     void extractUserId_shouldRejectExpiredToken() {
-        JwtProperties properties = new JwtProperties();
 
-        String secret = "dPIfiLAObiLOYcH3nEABCRF9wQMxIWHHWr0g00fs6Qc=";
+        JwtProperties properties =
+                createJwtProperties();
 
-        properties.setSecret(secret);
-        properties.setAccessTokenLifetime(Duration.ofMinutes(15));
+        JwtServiceImpl jwtService =
+                new JwtServiceImpl(properties);
 
-        JwtServiceImpl jwtService = new JwtServiceImpl(properties);
-
-        User user = new User(
-                "test@example.com",
-                "unused",
-                "ACTIVE",
-                OffsetDateTime.now(),
-                OffsetDateTime.now()
-        );
-
-        user.setId(42L);
-
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now =
+                OffsetDateTime.now();
 
         String expiredToken = Jwts.builder()
                 .subject("42")
-                .issuedAt(Date.from(now.minusMinutes(20).toInstant()))
-                .expiration(Date.from(now.minusMinutes(10).toInstant()))
+                .issuedAt(
+                        Date.from(
+                                now.minusMinutes(20)
+                                        .toInstant()
+                        )
+                )
+                .expiration(
+                        Date.from(
+                                now.minusMinutes(10)
+                                        .toInstant()
+                        )
+                )
                 .id(UUID.randomUUID().toString())
                 .signWith(properties.signingKey())
                 .compact();
 
         assertThrows(
-                Exception.class,
+                JwtException.class,
                 () -> jwtService.extractUserId(expiredToken)
         );
     }

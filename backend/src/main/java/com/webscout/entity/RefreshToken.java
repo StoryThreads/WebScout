@@ -68,10 +68,6 @@ public class RefreshToken {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public User getUser() {
         return user;
     }
@@ -84,24 +80,12 @@ public class RefreshToken {
         return tokenHash;
     }
 
-    public void setTokenHash(String tokenHash) {
-        this.tokenHash = tokenHash;
-    }
-
     public OffsetDateTime getExpiresAt() {
         return expiresAt;
     }
 
-    public void setExpiresAt(OffsetDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
     public OffsetDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public OffsetDateTime getRevokedAt() {

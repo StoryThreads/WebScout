@@ -1,6 +1,6 @@
 package com.webscout.dto;
 
-public record LoginResponse(
+public record RefreshTokenResponse(
         String accessToken,
         String refreshToken
 ) {}
