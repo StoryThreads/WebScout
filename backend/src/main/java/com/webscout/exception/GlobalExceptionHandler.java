@@ -110,6 +110,31 @@ public class GlobalExceptionHandler {
                 request
         );
     }
+    @ExceptionHandler(SourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleSourceNotFound(
+            SourceNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ErrorCode.SOURCE_NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(SourceNameAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleSourceNameAlreadyExists(
+            SourceNameAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ErrorCode.SOURCE_NAME_ALREADY_EXISTS,
+                exception.getMessage(),
+                request
+        );
+    }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
@@ -128,4 +153,5 @@ public class GlobalExceptionHandler {
                 .status(status)
                 .body(response);
     }
+
 }
