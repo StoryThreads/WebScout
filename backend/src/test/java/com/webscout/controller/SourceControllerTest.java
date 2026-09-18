@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.webscout.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -207,7 +206,7 @@ class SourceControllerTest {
         )).thenReturn(response);
 
         mockMvc.perform(
-                        put("/api/v1/sources/10")
+                        patch("/api/v1/sources/10")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )

@@ -10,6 +10,7 @@ import com.webscout.exception.SourceNotFoundException;
 import com.webscout.mapper.SourceMapper;
 import com.webscout.repository.SourceRepository;
 import com.webscout.repository.UserRepository;
+import com.webscout.validation.SourceUrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,22 +24,34 @@ public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
     private final UserRepository userRepository;
     private final SourceMapper sourceMapper;
+    private final SourceValidationService sourceValidationService;
 
     public SourceServiceImpl(
             SourceRepository sourceRepository,
             UserRepository userRepository,
-            SourceMapper sourceMapper
+            SourceMapper sourceMapper,
+            SourceValidationService sourceValidationService
     ) {
         this.sourceRepository = sourceRepository;
         this.userRepository = userRepository;
         this.sourceMapper = sourceMapper;
+        this.sourceValidationService = sourceValidationService;
     }
+
+
 
     @Override
     public SourceResponse create(
             Long userId,
             CreateSourceRequest request
     ) {
+        SourceUrlValidator.validateBaseUrl(
+                request.getBaseUrl()
+        );
+
+        SourceUrlValidator.validateAllowedPathPrefix(
+                request.getAllowedPathPrefix()
+        );
         User user = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -70,6 +83,13 @@ public class SourceServiceImpl implements SourceService {
             Long sourceId,
             UpdateSourceRequest request
     ) {
+        SourceUrlValidator.validateBaseUrl(
+                request.getBaseUrl()
+        );
+
+        SourceUrlValidator.validateAllowedPathPrefix(
+                request.getAllowedPathPrefix()
+        );
         Source source = sourceRepository
                 .findByIdAndUserId(sourceId, userId)
                 .orElseThrow(() ->

@@ -34,6 +34,9 @@ class SourceServiceImplTest {
     @Mock
     private SourceMapper sourceMapper;
 
+    @Mock
+    private SourceValidationService sourceValidationService;
+
     private SourceServiceImpl sourceService;
 
     @BeforeEach
@@ -41,7 +44,8 @@ class SourceServiceImplTest {
         sourceService = new SourceServiceImpl(
                 sourceRepository,
                 userRepository,
-                sourceMapper
+                sourceMapper,
+                sourceValidationService
         );
     }
 
@@ -116,7 +120,7 @@ class SourceServiceImplTest {
                 userId,
                 "Example"
         )).thenReturn(true);
-
+        request.setBaseUrl("https://example.com");
         assertThrows(
                 SourceNameAlreadyExistsException.class,
                 () -> sourceService.create(userId, request)
@@ -192,7 +196,7 @@ class SourceServiceImplTest {
                 sourceId,
                 userId
         )).thenReturn(Optional.empty());
-
+        request.setBaseUrl("https://example.com");
         assertThrows(
                 SourceNotFoundException.class,
                 () -> sourceService.update(
@@ -231,7 +235,7 @@ class SourceServiceImplTest {
                 userId,
                 "Existing"
         )).thenReturn(true);
-
+        request.setBaseUrl("https://example.com");
         assertThrows(
                 SourceNameAlreadyExistsException.class,
                 () -> sourceService.update(
@@ -367,5 +371,57 @@ class SourceServiceImplTest {
 
         verify(sourceRepository, never())
                 .delete(any());
+    }
+
+    @Test
+    void create_shouldRejectUnsupportedUrlScheme() {
+        CreateSourceRequest request = new CreateSourceRequest();
+        request.setName("Example");
+        request.setBaseUrl("ftp://example.com");
+        request.setEnabled(true);
+        request.setCrawlDelaySeconds(1);
+        request.setRequestTimeoutMs(5000);
+        request.setMaxPages(10);
+        request.setUserAgent("WebScout/1.0");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sourceService.create(1L, request)
+        );
+    }
+
+    @Test
+    void create_shouldRejectUrlWithoutHost() {
+        CreateSourceRequest request = new CreateSourceRequest();
+        request.setName("Example");
+        request.setBaseUrl("https:///test");
+        request.setEnabled(true);
+        request.setCrawlDelaySeconds(1);
+        request.setRequestTimeoutMs(5000);
+        request.setMaxPages(10);
+        request.setUserAgent("WebScout/1.0");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sourceService.create(1L, request)
+        );
+    }
+
+    @Test
+    void create_shouldRejectInvalidAllowedPathPrefix() {
+        CreateSourceRequest request = new CreateSourceRequest();
+        request.setName("Example");
+        request.setBaseUrl("https://example.com");
+        request.setEnabled(true);
+        request.setCrawlDelaySeconds(1);
+        request.setRequestTimeoutMs(5000);
+        request.setMaxPages(10);
+        request.setAllowedPathPrefix("docs");
+        request.setUserAgent("WebScout/1.0");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sourceService.create(1L, request)
+        );
     }
 }

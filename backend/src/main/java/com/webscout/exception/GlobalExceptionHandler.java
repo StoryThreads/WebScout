@@ -136,6 +136,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidSourceException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidSource(
+            InvalidSourceException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.INVALID_SOURCE,
+                exception.getMessage(),
+                request
+        );
+    }
+
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
             ErrorCode code,

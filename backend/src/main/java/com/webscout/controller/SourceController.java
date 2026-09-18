@@ -57,7 +57,7 @@ public class SourceController {
         );
     }
 
-    @PutMapping("/{sourceId}")
+    @PatchMapping("/{sourceId}")
     public ResponseEntity<SourceResponse> update(
             @PathVariable Long sourceId,
             @Valid @RequestBody UpdateSourceRequest request
@@ -89,6 +89,10 @@ public class SourceController {
                 SecurityContextHolder
                         .getContext()
                         .getAuthentication();
+
+        if (authentication == null) {
+            throw new IllegalStateException("Authentication is required");
+        }
 
         return (Long) authentication.getPrincipal();
     }

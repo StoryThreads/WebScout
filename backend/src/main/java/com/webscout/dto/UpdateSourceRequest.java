@@ -1,8 +1,6 @@
 package com.webscout.dto;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 public class UpdateSourceRequest {
 
     @NotBlank
@@ -18,14 +16,17 @@ public class UpdateSourceRequest {
 
     @NotNull
     @Min(0)
+    @Max(86400)
     private Integer crawlDelaySeconds;
 
     @NotNull
     @Min(1)
+    @Max(120000)
     private Integer requestTimeoutMs;
 
     @NotNull
     @Min(1)
+    @Max(10000)
     private Integer maxPages;
 
     @Size(max = 2048)
