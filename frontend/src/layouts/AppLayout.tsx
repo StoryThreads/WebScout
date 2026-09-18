@@ -30,7 +30,7 @@ export const AppLayout: React.FC = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, status: 'Ready' },
-    { name: 'Sources', path: '/sources', icon: Globe, status: 'Phase 4' },
+    { name: 'Sources', path: '/sources', icon: Globe, status: 'Ready' },
     { name: 'Crawl Engine', path: '/crawls', icon: PlayCircle, status: 'Phase 9' },
     { name: 'Indexed Pages', path: '/pages', icon: FileText, status: 'Phase 8' },
     { name: 'Topics & Scoring', path: '/topics', icon: Hash, status: 'Phase 11' },

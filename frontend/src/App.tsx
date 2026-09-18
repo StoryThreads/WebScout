@@ -7,6 +7,7 @@ import { AppLayout } from './layouts/AppLayout';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { DashboardPage } from './features/dashboard/DashboardPage';
+import { SourcesPage } from './features/sources/SourcesPage';
 
 export const App: React.FC = () => {
   return (
@@ -41,8 +42,7 @@ export const App: React.FC = () => {
             }
           >
             <Route index element={<DashboardPage />} />
-            {/* Fallback for upcoming feature paths to dashboard */}
-            <Route path="sources" element={<DashboardPage />} />
+            <Route path="sources" element={<SourcesPage />} />
             <Route path="crawls" element={<DashboardPage />} />
             <Route path="pages" element={<DashboardPage />} />
             <Route path="topics" element={<DashboardPage />} />
