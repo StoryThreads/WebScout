@@ -93,7 +93,14 @@ class SourceServiceImplTest {
 
         assertSame(response, result);
 
-        verify(userRepository).findById(userId);
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        verify(userRepository)
+                .findById(userId);
 
         verify(sourceRepository)
                 .existsByUserIdAndName(userId, "Example");
@@ -101,9 +108,11 @@ class SourceServiceImplTest {
         verify(sourceMapper)
                 .toEntity(eq(request), eq(user), any());
 
-        verify(sourceRepository).save(source);
+        verify(sourceRepository)
+                .save(source);
 
-        verify(sourceMapper).toResponse(savedSource);
+        verify(sourceMapper)
+                .toResponse(savedSource);
     }
 
     @Test
@@ -112,25 +121,75 @@ class SourceServiceImplTest {
 
         CreateSourceRequest request = new CreateSourceRequest();
         request.setName("Example");
+        request.setBaseUrl("https://example.com");
+        request.setAllowedPathPrefix("/");
+
+        User user = mock(User.class);
 
         when(userRepository.findById(userId))
-                .thenReturn(Optional.of(mock(User.class)));
+                .thenReturn(Optional.of(user));
 
         when(sourceRepository.existsByUserIdAndName(
                 userId,
                 "Example"
         )).thenReturn(true);
-        request.setBaseUrl("https://example.com");
+
         assertThrows(
                 SourceNameAlreadyExistsException.class,
                 () -> sourceService.create(userId, request)
         );
+
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        verify(userRepository)
+                .findById(userId);
 
         verify(sourceRepository)
                 .existsByUserIdAndName(userId, "Example");
 
         verify(sourceMapper, never())
                 .toEntity(any(), any(), any());
+
+        verify(sourceRepository, never())
+                .save(any());
+    }
+
+    @Test
+    void create_shouldValidateSourceBeforeUserLookup() {
+        Long userId = 1L;
+
+        CreateSourceRequest request = new CreateSourceRequest();
+        request.setName("Example");
+        request.setBaseUrl("https://example.com");
+        request.setAllowedPathPrefix("/");
+
+        doThrow(new IllegalArgumentException("Invalid source"))
+                .when(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sourceService.create(userId, request)
+        );
+
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        verify(userRepository, never())
+                .findById(anyLong());
+
+        verify(sourceRepository, never())
+                .existsByUserIdAndName(anyLong(), anyString());
 
         verify(sourceRepository, never())
                 .save(any());
@@ -177,6 +236,12 @@ class SourceServiceImplTest {
         verify(sourceRepository)
                 .findByIdAndUserId(sourceId, userId);
 
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
         verify(sourceMapper)
                 .updateEntity(eq(source), eq(request), any());
 
@@ -191,12 +256,13 @@ class SourceServiceImplTest {
 
         UpdateSourceRequest request = new UpdateSourceRequest();
         request.setName("Updated");
+        request.setBaseUrl("https://example.com");
 
         when(sourceRepository.findByIdAndUserId(
                 sourceId,
                 userId
         )).thenReturn(Optional.empty());
-        request.setBaseUrl("https://example.com");
+
         assertThrows(
                 SourceNotFoundException.class,
                 () -> sourceService.update(
@@ -205,6 +271,12 @@ class SourceServiceImplTest {
                         request
                 )
         );
+
+        verify(sourceRepository)
+                .findByIdAndUserId(sourceId, userId);
+
+        verify(sourceValidationService, never())
+                .validate(anyString(), anyString());
 
         verify(sourceMapper, never())
                 .updateEntity(any(), any(), any());
@@ -220,6 +292,8 @@ class SourceServiceImplTest {
 
         UpdateSourceRequest request = new UpdateSourceRequest();
         request.setName("Existing");
+        request.setBaseUrl("https://example.com");
+        request.setAllowedPathPrefix("/");
 
         Source source = mock(Source.class);
 
@@ -235,7 +309,7 @@ class SourceServiceImplTest {
                 userId,
                 "Existing"
         )).thenReturn(true);
-        request.setBaseUrl("https://example.com");
+
         assertThrows(
                 SourceNameAlreadyExistsException.class,
                 () -> sourceService.update(
@@ -244,6 +318,73 @@ class SourceServiceImplTest {
                         request
                 )
         );
+
+        verify(sourceRepository)
+                .findByIdAndUserId(sourceId, userId);
+
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        verify(sourceRepository)
+                .existsByUserIdAndName(
+                        userId,
+                        "Existing"
+                );
+
+        verify(sourceMapper, never())
+                .updateEntity(any(), any(), any());
+
+        verify(sourceRepository, never())
+                .save(any());
+    }
+
+    @Test
+    void update_shouldValidateAfterOwnershipCheck() {
+        Long userId = 1L;
+        Long sourceId = 10L;
+
+        UpdateSourceRequest request = new UpdateSourceRequest();
+        request.setName("Updated");
+        request.setBaseUrl("https://example.com");
+        request.setAllowedPathPrefix("/");
+
+        Source source = mock(Source.class);
+
+        when(sourceRepository.findByIdAndUserId(
+                sourceId,
+                userId
+        )).thenReturn(Optional.of(source));
+
+        doThrow(new IllegalArgumentException("Invalid source"))
+                .when(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sourceService.update(
+                        userId,
+                        sourceId,
+                        request
+                )
+        );
+
+        verify(sourceRepository)
+                .findByIdAndUserId(sourceId, userId);
+
+        verify(sourceValidationService)
+                .validate(
+                        request.getBaseUrl(),
+                        request.getAllowedPathPrefix()
+                );
+
+        verify(sourceRepository, never())
+                .existsByUserIdAndName(anyLong(), anyString());
 
         verify(sourceMapper, never())
                 .updateEntity(any(), any(), any());
@@ -291,6 +432,9 @@ class SourceServiceImplTest {
                 SourceNotFoundException.class,
                 () -> sourceService.getById(userId, sourceId)
         );
+
+        verify(sourceRepository)
+                .findByIdAndUserId(sourceId, userId);
 
         verify(sourceMapper, never())
                 .toResponse(any());
@@ -369,59 +513,10 @@ class SourceServiceImplTest {
                 () -> sourceService.delete(userId, sourceId)
         );
 
+        verify(sourceRepository)
+                .findByIdAndUserId(sourceId, userId);
+
         verify(sourceRepository, never())
                 .delete(any());
-    }
-
-    @Test
-    void create_shouldRejectUnsupportedUrlScheme() {
-        CreateSourceRequest request = new CreateSourceRequest();
-        request.setName("Example");
-        request.setBaseUrl("ftp://example.com");
-        request.setEnabled(true);
-        request.setCrawlDelaySeconds(1);
-        request.setRequestTimeoutMs(5000);
-        request.setMaxPages(10);
-        request.setUserAgent("WebScout/1.0");
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sourceService.create(1L, request)
-        );
-    }
-
-    @Test
-    void create_shouldRejectUrlWithoutHost() {
-        CreateSourceRequest request = new CreateSourceRequest();
-        request.setName("Example");
-        request.setBaseUrl("https:///test");
-        request.setEnabled(true);
-        request.setCrawlDelaySeconds(1);
-        request.setRequestTimeoutMs(5000);
-        request.setMaxPages(10);
-        request.setUserAgent("WebScout/1.0");
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sourceService.create(1L, request)
-        );
-    }
-
-    @Test
-    void create_shouldRejectInvalidAllowedPathPrefix() {
-        CreateSourceRequest request = new CreateSourceRequest();
-        request.setName("Example");
-        request.setBaseUrl("https://example.com");
-        request.setEnabled(true);
-        request.setCrawlDelaySeconds(1);
-        request.setRequestTimeoutMs(5000);
-        request.setMaxPages(10);
-        request.setAllowedPathPrefix("docs");
-        request.setUserAgent("WebScout/1.0");
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sourceService.create(1L, request)
-        );
     }
 }
