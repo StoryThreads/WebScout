@@ -185,7 +185,6 @@ public class CrawlCoordinator {
             if (url == null) {
                 break;
             }
-            context.markPageProcessed();
 
             /*
              * Count this URL as processed by the crawl context.
