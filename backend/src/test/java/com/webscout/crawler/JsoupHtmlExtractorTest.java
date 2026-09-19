@@ -304,4 +304,31 @@ class JsoupHtmlExtractorTest {
                         )
         );
     }
+
+    @Test
+    void shouldHandlePageWithoutTitle() {
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head></head>
+            <body>
+                <main>
+                    <p>Content without a title.</p>
+                </main>
+            </body>
+            </html>
+            """;
+
+        HtmlExtractionResult result = extractor.extract(
+                NormalizedUrl.parse("https://example.com/article"),
+                html
+        );
+
+        assertNull(result.title());
+
+        assertEquals(
+                "Content without a title.",
+                result.normalizedText()
+        );
+    }
 }
