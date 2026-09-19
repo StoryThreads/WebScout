@@ -1,5 +1,7 @@
 package com.webscout.crawler;
 
+import org.springframework.stereotype.Component;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Component
 public final class JavaHttpFetcher implements HttpFetcher {
 
     private final HttpClient httpClient;

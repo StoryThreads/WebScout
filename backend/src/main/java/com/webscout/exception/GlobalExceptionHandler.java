@@ -167,4 +167,30 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(CrawlJobNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCrawlJobNotFound(
+            CrawlJobNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ErrorCode.CRAWL_JOB_NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ActiveCrawlAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleActiveCrawlAlreadyExists(
+            ActiveCrawlAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ErrorCode.ACTIVE_CRAWL_ALREADY_EXISTS,
+                exception.getMessage(),
+                request
+        );
+    }
+
 }

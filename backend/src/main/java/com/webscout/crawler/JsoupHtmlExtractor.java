@@ -3,6 +3,7 @@ package com.webscout.crawler;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@Component
 public final class JsoupHtmlExtractor implements HtmlExtractor {
 
     private static final String NON_CONTENT_SELECTORS =
