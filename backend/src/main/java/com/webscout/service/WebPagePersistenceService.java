@@ -91,10 +91,24 @@ public class WebPagePersistenceService {
 
         /*
          * CHANGED PAGE
-         *
-         * Full changed-page behavior will be completed
-         * in the next Phase 8 iteration.
          */
+        existingPage.updateCrawlMetadata(
+                toNullableString(
+                        extractionResult.canonicalUrl()
+                ),
+                extractionResult.title(),
+                extractionResult.description(),
+                extractionResult.normalizedText(),
+                contentHash,
+                toOffsetDateTime(
+                        extractionResult.publishedAt()
+                ),
+                now,
+                now,
+                httpStatus,
+                contentType
+        );
+
         return new WebPagePersistenceResult(
                 existingPage,
                 PersistenceStatus.CHANGED
