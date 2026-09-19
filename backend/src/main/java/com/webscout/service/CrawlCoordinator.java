@@ -83,14 +83,13 @@ public class CrawlCoordinator {
 
         try {
 
-            crawlJobPersistenceService
-                    .markRunning(
-                            crawlJobId
-                    );
+            CrawlJob runningJob =
+                    crawlJobPersistenceService
+                            .markRunning(crawlJobId);
 
             runCrawl(
                     crawlJobId,
-                    crawlJob
+                    runningJob
             );
 
         } catch (Exception exception) {
@@ -186,6 +185,15 @@ public class CrawlCoordinator {
             if (url == null) {
                 break;
             }
+            context.markPageProcessed();
+
+            /*
+             * Count this URL as processed by the crawl context.
+             *
+             * This must happen exactly once for every URL removed
+             * from the frontier so that maxPages is actually enforced.
+             */
+            context.markPageProcessed();
 
             try {
 
