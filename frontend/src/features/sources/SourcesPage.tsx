@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { SourceResponse } from '../../types/source';
 import { sourcesApi } from '../../api/sources';
 import { SourceModal } from './SourceModal';
+import { TriggerCrawlModal } from '../crawls/TriggerCrawlModal';
 import {
   Globe,
   Plus,
@@ -15,6 +17,9 @@ import {
   AlertCircle,
   PlayCircle,
   RefreshCw,
+  ArrowRight,
+  Cpu,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const SourcesPage: React.FC = () => {
@@ -29,6 +34,11 @@ export const SourcesPage: React.FC = () => {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<SourceResponse | null>(null);
+
+  // Crawl modal state
+  const [isTriggerModalOpen, setIsTriggerModalOpen] = useState(false);
+  const [crawlSourceId, setCrawlSourceId] = useState<number | undefined>(undefined);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Delete confirmation modal state
   const [sourceToDelete, setSourceToDelete] = useState<SourceResponse | null>(null);
@@ -123,6 +133,14 @@ export const SourcesPage: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-8 z-50 rounded-xl border border-emerald-500/30 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-md flex items-center gap-3 text-xs text-emerald-300 animate-in slide-in-from-top-4 duration-200">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -131,7 +149,7 @@ export const SourcesPage: React.FC = () => {
               Source Management
             </h1>
             <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-              Phase 4 Live
+              Phase 4 & 5 Live
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -270,9 +288,14 @@ export const SourcesPage: React.FC = () => {
               {/* Card Header */}
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-sm font-bold text-white truncate flex-1" title={source.name}>
-                    {source.name}
-                  </h3>
+                  <Link
+                    to={`/sources/${source.id}`}
+                    className="text-sm font-bold text-white truncate flex-1 hover:text-emerald-400 transition-colors group flex items-center gap-1.5"
+                    title={`View ${source.name} Details & Crawler Policy`}
+                  >
+                    <span className="truncate">{source.name}</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-emerald-400 shrink-0" />
+                  </Link>
                   <button
                     onClick={() => handleToggleEnabled(source)}
                     className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
@@ -336,6 +359,14 @@ export const SourcesPage: React.FC = () => {
               {/* Card Footer Actions */}
               <div className="flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs">
                 <div className="flex items-center gap-2">
+                  <Link
+                    to={`/sources/${source.id}`}
+                    className="flex items-center gap-1 rounded-lg p-1.5 text-teal-400 hover:bg-teal-500/10 transition-all font-medium"
+                    title="View Crawler Foundations Policy"
+                  >
+                    <Cpu className="h-3.5 w-3.5" />
+                    <span className="text-[11px]">Crawler Policy</span>
+                  </Link>
                   <button
                     onClick={() => handleEdit(source)}
                     className="flex items-center gap-1 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
@@ -354,13 +385,23 @@ export const SourcesPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div
-                  className="flex items-center gap-1 text-[11px] text-slate-500 font-medium cursor-not-allowed"
-                  title="Crawl execution engine will be connected in Phase 9"
+                <button
+                  onClick={() => {
+                    if (!source.enabled) return;
+                    setCrawlSourceId(source.id);
+                    setIsTriggerModalOpen(true);
+                  }}
+                  disabled={!source.enabled}
+                  className={`flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-lg border transition-all ${
+                    source.enabled
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 shadow-sm'
+                      : 'border-slate-800 bg-slate-950 text-slate-600 cursor-not-allowed'
+                  }`}
+                  title={source.enabled ? 'Trigger Asynchronous Crawl (Phase 9)' : 'Enable source to run crawl'}
                 >
-                  <PlayCircle className="h-3.5 w-3.5 text-slate-600" />
-                  <span>Crawl (Phase 9)</span>
-                </div>
+                  <PlayCircle className="h-3.5 w-3.5" />
+                  <span>Run Crawl</span>
+                </button>
               </div>
             </div>
           ))}
@@ -373,6 +414,21 @@ export const SourcesPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleModalSuccess}
         sourceToEdit={selectedSource}
+      />
+
+      {/* Trigger Crawl Modal */}
+      <TriggerCrawlModal
+        isOpen={isTriggerModalOpen}
+        onClose={() => {
+          setIsTriggerModalOpen(false);
+          setCrawlSourceId(undefined);
+        }}
+        onSuccess={(res, src) => {
+          setToastMessage(`Crawl #${res.crawlId} successfully initiated for "${src.name}"!`);
+          setTimeout(() => setToastMessage(null), 5000);
+        }}
+        sources={sources}
+        preselectedSourceId={crawlSourceId}
       />
 
       {/* Delete Confirmation Modal */}

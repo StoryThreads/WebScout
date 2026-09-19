@@ -62,9 +62,12 @@ export const SourceModal: React.FC<SourceModalProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
-    // Basic client validation
     if (!name.trim()) {
       setErrorMessage('Source name is required.');
+      return;
+    }
+    if (name.trim().length > 255) {
+      setErrorMessage('Source name must not exceed 255 characters.');
       return;
     }
 
@@ -73,23 +76,65 @@ export const SourceModal: React.FC<SourceModalProps> = ({
       return;
     }
 
-    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      setErrorMessage('Base URL must begin with http:// or https://');
+    const trimmedUrl = baseUrl.trim();
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      setErrorMessage('Source URL must begin with http:// or https://');
       return;
     }
 
-    if (crawlDelaySeconds < 0) {
-      setErrorMessage('Crawl delay must be 0 or greater.');
+    if (trimmedUrl.includes('#')) {
+      setErrorMessage('Source URL must not contain a fragment (#).');
       return;
     }
 
-    if (requestTimeoutMs < 1) {
-      setErrorMessage('Request timeout must be at least 1 ms.');
+    try {
+      const parsed = new URL(trimmedUrl);
+      if (!parsed.hostname) {
+        setErrorMessage('Source URL must contain a valid host.');
+        return;
+      }
+      if (parsed.username || parsed.password) {
+        setErrorMessage('Source URL must not contain user credentials.');
+        return;
+      }
+    } catch {
+      setErrorMessage('Invalid Source URL syntax.');
       return;
     }
 
-    if (maxPages < 1) {
-      setErrorMessage('Max pages must be at least 1.');
+    if (allowedPathPrefix.trim()) {
+      const prefix = allowedPathPrefix.trim();
+      if (!prefix.startsWith('/')) {
+        setErrorMessage("Allowed path prefix must start with '/'.");
+        return;
+      }
+      if (prefix.includes('#')) {
+        setErrorMessage('Allowed path prefix must not contain a fragment (#).');
+        return;
+      }
+    }
+
+    if (crawlDelaySeconds < 0 || crawlDelaySeconds > 86400) {
+      setErrorMessage('Crawl delay must be between 0 and 86,400 seconds (24 hours).');
+      return;
+    }
+
+    if (requestTimeoutMs < 1 || requestTimeoutMs > 120000) {
+      setErrorMessage('Request timeout must be between 1 ms and 120,000 ms (2 minutes).');
+      return;
+    }
+
+    if (maxPages < 1 || maxPages > 10000) {
+      setErrorMessage('Max pages must be between 1 and 10,000 pages.');
+      return;
+    }
+
+    if (!userAgent.trim()) {
+      setErrorMessage('User-Agent string is required.');
+      return;
+    }
+    if (userAgent.trim().length > 512) {
+      setErrorMessage('User-Agent must not exceed 512 characters.');
       return;
     }
 

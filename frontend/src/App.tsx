@@ -8,6 +8,8 @@ import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { SourcesPage } from './features/sources/SourcesPage';
+import { SourceDetailPage } from './features/sources/SourceDetailPage';
+import { CrawlsPage } from './features/crawls/CrawlsPage';
 
 export const App: React.FC = () => {
   return (
@@ -43,7 +45,8 @@ export const App: React.FC = () => {
           >
             <Route index element={<DashboardPage />} />
             <Route path="sources" element={<SourcesPage />} />
-            <Route path="crawls" element={<DashboardPage />} />
+            <Route path="sources/:sourceId" element={<SourceDetailPage />} />
+            <Route path="crawls" element={<CrawlsPage />} />
             <Route path="pages" element={<DashboardPage />} />
             <Route path="topics" element={<DashboardPage />} />
             <Route path="search" element={<DashboardPage />} />

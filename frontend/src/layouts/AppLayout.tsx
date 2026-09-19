@@ -31,7 +31,7 @@ export const AppLayout: React.FC = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, status: 'Ready' },
     { name: 'Sources', path: '/sources', icon: Globe, status: 'Ready' },
-    { name: 'Crawl Engine', path: '/crawls', icon: PlayCircle, status: 'Phase 9' },
+    { name: 'Crawl Engine', path: '/crawls', icon: PlayCircle, status: 'Ready' },
     { name: 'Indexed Pages', path: '/pages', icon: FileText, status: 'Phase 8' },
     { name: 'Topics & Scoring', path: '/topics', icon: Hash, status: 'Phase 11' },
     { name: 'Search & Filters', path: '/search', icon: Search, status: 'Phase 10' },
@@ -119,15 +119,15 @@ export const AppLayout: React.FC = () => {
             <div className="flex items-center justify-between font-medium text-slate-300">
               <span className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                Backend Security
+                Crawler Pipeline
               </span>
               <span className="flex items-center gap-1.5 text-emerald-400 text-[11px]">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                Phase 3 Live
+                Phase 1–9 Live
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-500">
-              JWT stateless boundary active with refresh token family rotation.
+              Crawl Job Engine, HTTP Fetcher & Page Persistence operational.
             </p>
           </div>
         </div>

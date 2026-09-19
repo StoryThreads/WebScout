@@ -18,7 +18,7 @@ export const sourcesApi = {
   },
 
   update: async (sourceId: number, payload: UpdateSourceRequest): Promise<SourceResponse> => {
-    const response = await apiClient.put<SourceResponse>(`/sources/${sourceId}`, payload);
+    const response = await apiClient.patch<SourceResponse>(`/sources/${sourceId}`, payload);
     return response.data;
   },
 
