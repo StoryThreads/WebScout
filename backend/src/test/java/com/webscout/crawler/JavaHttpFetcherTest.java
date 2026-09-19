@@ -545,13 +545,12 @@ class JavaHttpFetcherTest {
                 exchange -> {
 
                     byte[] response =
-                            "<html>Not Found</html>"
-                                    .getBytes();
+                            "Not Found".getBytes();
 
                     exchange.getResponseHeaders()
                             .add(
                                     "Content-Type",
-                                    "text/html"
+                                    "text/plain"
                             );
 
                     exchange.sendResponseHeaders(
@@ -567,23 +566,32 @@ class JavaHttpFetcherTest {
                 }
         );
 
-        FetchResult result =
-                fetcher.fetch(
-                        NormalizedUrl.parse(
-                                baseUrl + "/not-found"
-                        ),
-                        policy(1_000_000)
+        CrawlFetchException exception =
+                assertThrows(
+                        CrawlFetchException.class,
+                        () -> fetcher.fetch(
+                                NormalizedUrl.parse(
+                                        baseUrl + "/not-found"
+                                ),
+                                policy(1_000_000)
+                        )
                 );
 
         assertEquals(
-                404,
-                result.statusCode()
+                CrawlErrorType.HTTP_CLIENT_ERROR,
+                exception.errorType()
         );
 
         assertEquals(
-                CrawlErrorType.HTTP_CLIENT_ERROR,
-                HttpStatusClassifier.classify(
-                        result.statusCode()
+                404,
+                exception.statusCode()
+        );
+
+        assertEquals(
+                "text/plain",
+                getHeaderIgnoreCase(
+                        exception.headers(),
+                        "Content-Type"
                 )
         );
     }
@@ -596,13 +604,12 @@ class JavaHttpFetcherTest {
                 exchange -> {
 
                     byte[] response =
-                            "<html>Too many requests</html>"
-                                    .getBytes();
+                            "Too many requests".getBytes();
 
                     exchange.getResponseHeaders()
                             .add(
                                     "Content-Type",
-                                    "text/html"
+                                    "text/plain"
                             );
 
                     exchange.getResponseHeaders()
@@ -624,37 +631,32 @@ class JavaHttpFetcherTest {
                 }
         );
 
-        FetchResult result =
-                fetcher.fetch(
-                        NormalizedUrl.parse(
-                                baseUrl + "/rate-limit"
-                        ),
-                        policy(1_000_000)
+        CrawlFetchException exception =
+                assertThrows(
+                        CrawlFetchException.class,
+                        () -> fetcher.fetch(
+                                NormalizedUrl.parse(
+                                        baseUrl + "/rate-limit"
+                                ),
+                                policy(1_000_000)
+                        )
                 );
 
         assertEquals(
+                CrawlErrorType.HTTP_RATE_LIMITED,
+                exception.errorType()
+        );
+
+        assertEquals(
                 429,
-                result.statusCode()
+                exception.statusCode()
         );
 
         assertEquals(
                 "30",
-                result.headers()
-                        .entrySet()
-                        .stream()
-                        .filter(entry ->
-                                entry.getKey()
-                                        .equalsIgnoreCase("Retry-After")
-                        )
-                        .map(Map.Entry::getValue)
-                        .findFirst()
-                        .orElse(null)
-        );
-
-        assertEquals(
-                CrawlErrorType.HTTP_RATE_LIMITED,
-                HttpStatusClassifier.classify(
-                        result.statusCode()
+                getHeaderIgnoreCase(
+                        exception.headers(),
+                        "Retry-After"
                 )
         );
     }
@@ -667,13 +669,12 @@ class JavaHttpFetcherTest {
                 exchange -> {
 
                     byte[] response =
-                            "<html>Server error</html>"
-                                    .getBytes();
+                            "Server error".getBytes();
 
                     exchange.getResponseHeaders()
                             .add(
                                     "Content-Type",
-                                    "text/html"
+                                    "text/plain"
                             );
 
                     exchange.sendResponseHeaders(
@@ -689,23 +690,32 @@ class JavaHttpFetcherTest {
                 }
         );
 
-        FetchResult result =
-                fetcher.fetch(
-                        NormalizedUrl.parse(
-                                baseUrl + "/server-error"
-                        ),
-                        policy(1_000_000)
+        CrawlFetchException exception =
+                assertThrows(
+                        CrawlFetchException.class,
+                        () -> fetcher.fetch(
+                                NormalizedUrl.parse(
+                                        baseUrl + "/server-error"
+                                ),
+                                policy(1_000_000)
+                        )
                 );
 
         assertEquals(
-                503,
-                result.statusCode()
+                CrawlErrorType.HTTP_SERVER_ERROR,
+                exception.errorType()
         );
 
         assertEquals(
-                CrawlErrorType.HTTP_SERVER_ERROR,
-                HttpStatusClassifier.classify(
-                        result.statusCode()
+                503,
+                exception.statusCode()
+        );
+
+        assertEquals(
+                "text/plain",
+                getHeaderIgnoreCase(
+                        exception.headers(),
+                        "Content-Type"
                 )
         );
     }
@@ -797,5 +807,19 @@ class JavaHttpFetcherTest {
                 CrawlErrorType.TIMEOUT,
                 exception.errorType()
         );
+    }
+    private String getHeaderIgnoreCase(
+            Map<String, String> headers,
+            String headerName
+    ) {
+        return headers.entrySet()
+                .stream()
+                .filter(entry ->
+                        entry.getKey()
+                                .equalsIgnoreCase(headerName)
+                )
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 }

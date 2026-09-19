@@ -161,4 +161,23 @@ class CrawlPolicyTest {
                 )
         );
     }
+    @Test
+    void shouldRejectRedirectTargetOutsideScope() {
+
+        CrawlPolicy policy =
+                new CrawlPolicy(
+                        "example.com",
+                        "/docs",
+                        100
+                );
+
+        NormalizedUrl redirectTarget =
+                NormalizedUrl.parse(
+                        "https://other.com/docs/page"
+                );
+
+        assertFalse(
+                policy.isAllowed(redirectTarget)
+        );
+    }
 }
