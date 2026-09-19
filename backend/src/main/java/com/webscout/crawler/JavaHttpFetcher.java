@@ -411,7 +411,7 @@ public final class JavaHttpFetcher implements HttpFetcher {
                 .stream()
                 .collect(
                         Collectors.toUnmodifiableMap(
-                                Map.Entry::getKey,
+                                entry -> entry.getKey(),
                                 entry -> String.join(
                                         ", ",
                                         entry.getValue()

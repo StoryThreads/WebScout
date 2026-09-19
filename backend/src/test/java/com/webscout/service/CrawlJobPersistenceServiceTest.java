@@ -170,7 +170,7 @@ class CrawlJobPersistenceServiceTest {
     void markRunning_shouldTransitionQueuedToRunning() {
 
         when(
-                crawlJobRepository.findById(10L)
+                crawlJobRepository.findWithSourceById(10L)
         ).thenReturn(Optional.of(crawlJob));
 
         when(
@@ -188,6 +188,10 @@ class CrawlJobPersistenceServiceTest {
         assertNotNull(
                 result.getStartedAt()
         );
+
+        verify(
+                crawlJobRepository
+        ).findWithSourceById(10L);
 
         verify(
                 crawlJobRepository

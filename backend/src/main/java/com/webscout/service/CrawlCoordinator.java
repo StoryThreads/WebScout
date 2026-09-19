@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Objects;
 
 @Service
@@ -75,11 +74,10 @@ public class CrawlCoordinator {
                 "Crawl job id must not be null"
         );
 
-        CrawlJob crawlJob =
-                crawlJobPersistenceService
-                        .getForExecution(
-                                crawlJobId
-                        );
+        crawlJobPersistenceService
+                .getForExecution(
+                        crawlJobId
+                );
 
         try {
 

@@ -104,7 +104,14 @@ public class CrawlJobPersistenceService {
     @Transactional
     public CrawlJob markRunning(Long jobId) {
 
-        CrawlJob crawlJob = getRequired(jobId);
+        CrawlJob crawlJob =
+                crawlJobRepository
+                        .findWithSourceById(jobId)
+                        .orElseThrow(
+                                () -> new CrawlJobNotFoundException(
+                                        jobId
+                                )
+                        );
 
         crawlJob.markRunning(now());
 

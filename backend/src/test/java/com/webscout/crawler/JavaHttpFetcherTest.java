@@ -818,7 +818,7 @@ class JavaHttpFetcherTest {
                         entry.getKey()
                                 .equalsIgnoreCase(headerName)
                 )
-                .map(Map.Entry::getValue)
+                .map(entry -> entry.getValue())
                 .findFirst()
                 .orElse(null);
     }

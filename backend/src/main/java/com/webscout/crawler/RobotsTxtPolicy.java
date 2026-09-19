@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 
 public class RobotsTxtPolicy implements RobotsPolicy {
 
-    private boolean allowed = true;
     private final Duration crawlDelay;
     private final List<Rule> rules = new ArrayList<>();
 
